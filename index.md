@@ -2,7 +2,7 @@
 
 
 
-## Por qué aprender React
+# ¿Por qué React?
 
 
 ## Popularidad
@@ -70,7 +70,8 @@ yarn --version
 ```
 
 
-## Configuración tradicional
+
+# Introducción React y JSX
 
 
 ## Scripts de React
@@ -289,22 +290,25 @@ ReactDOM.render(template, appRoot)
 - npm scripts en *package.json*:
   ```bash
     "build": "babel -w src/app.js --out-file public/scripts/app.js  --presets=env,react",
-    "start": "live-server ./public"
+    "start": "live-server ./public",
+    "start-dev": "npm run build & npm start
   ```
 
 
 ## Ejecución y parada del proyecto
 
-- Ejecución:
+- Mediante dos comandos:
 
   ```bash
-    npm run build &
+    npm run build
     npm start
   ```
-- Parada
-  - CTRL + C para parar *npm start*
-  - *fg* para llevar el proceso npm run build al frente
-  - CTRL + C para pararlo
+
+- De una sola vez:
+
+  ```bash
+  npm run start-dev
+  ```
 
 
 ## Explorar JSX
@@ -901,15 +905,21 @@ renderApp()
 ## Ejercicio
 
 - Añadimos más campos a las cervezas y gestionamos un array de objetos
-- Para mostrarlas en la lista ponemos solo el nombre, pero creamos botones que permitan ver el resto:
+- Para mostrarlas en la lista ponemos solo el nombre, pero creamos botones que permitan ver el resto
+- Puedes utilizar las siguientes slides de ayuda
+  - Como hacer visible un elemento
+  - Como leer los datos de un formulario y convertirlos a un json
+
+
+## Ayuda visibilidad formulario
 
 ```js
-let visibility = false;
+let visibility = false
 
 const toggleVisibility = () => {
   visibility = !visibility
   render()
-};
+}
 
 const render = () => {
   const template = (
@@ -924,10 +934,665 @@ const render = () => {
         </div>
       )}
     </div>
-  );
+  )
 
-  ReactDOM.render(template, document.getElementById("app"));
+  ReactDOM.render(template, document.getElementById("app"))
 }
 
 render()
 ```
+
+
+## Ayuda: formulario a JSON
+
+- Los datos se recogen en una colección (formulario)
+  ```js
+  const elementsForm = e.target
+  ```
+- Para obtener los datos en JSON:
+  - Se convierte la colección a un array
+  - Se ejecuta el método reduce del array y cada elemento del array se convierte a un campo del objeto final
+  - Podemos utizar *Array.from* o *call* que hace una conversión de tipos implícita
+
+
+```js
+const formToJSON = elements =>
+[].reduce.call(
+  elements,
+  (data, element) => {
+    if (element.value) data[element.name] = element.value
+    return data
+  },
+  {}
+)
+
+const formToJSON = elements => {
+  const newElements = Array.from(elements)
+  return newElements.reduce((data, element) => {
+    if (element.value) data[element.name] = element.value
+    return data
+  }, {})
+}
+```
+
+
+
+# Clases ES6 y React components
+
+
+## Clases ES6
+
+- Creamos la clase persona:
+  - Campo nombre, por defecto anónimo
+  - Método saludar: *¡Hola soy xxxx!*
+- Instanciamos para comprobar
+
+
+```js
+class Persona {
+  constructor (name = 'Anónimo') {
+    this.name = name
+  }
+  saludar () {
+    return `Hola, soy ${this.name}`
+  }
+}
+
+const pepe = new Persona('Pepe')
+console.log(pepe.saludar())
+
+const desconocido = new Persona()
+console.log(desconocido.saludar())
+```
+
+
+## Ejercicio clases
+
+- Añadimos el campo *edad*, por defecto 0
+- Añadimos el método *presentarse* donde diga nombre y edad
+
+
+## Solución clase
+
+```js
+class Persona {
+  constructor (nombre = 'Anónimo', edad = 0) {
+    this.nombre = nombre
+    this.edad = edad
+  }
+  saludar () {
+    return `Hola, soy ${this.nombre}`
+  }
+  presentarse () {
+    return `Me llamo ${this.nombre} y tengo ${this.edad} años`
+  }
+}
+
+const pepe = new Persona('Pepe', 26)
+console.log(pepe.saludar())
+
+const desconocido = new Persona()
+console.log(desconocido.presentarse())
+```
+
+
+## Subclases
+
+- Creamos la clase Estudiante que tiene los siguientes atributos:
+  - Nombre
+  - Edad
+  - Grado (Informática, Inglés...)
+
+
+```js
+class Estudiante extends Persona {
+  constructor (nombre, edad, grado) {
+    super(nombre, edad)
+    this.grado = grado
+  }
+  tieneGrado () {
+    return !!this.grado
+  }
+  presentarse () {
+    let presentación = super.presentarse()
+
+    if (this.tieneGrado()) {
+      presentación += ` He estudiado la carrera de ${this.grado}.`
+    }
+
+    return presentación
+  }
+}
+```
+
+
+## Ejercicio subclases
+
+- Crea la clase viajero según los requerimientos siguientes:
+    - Atributos:
+      - Nombre
+      - Edad
+      - Ciudad de origen
+    - Métodos:
+      - Saludar, donde diga la ciudad de donde procede.
+
+
+## Solución: clase Viajero
+
+```js
+class Viajero extends Persona {
+  constructor(nombre, edad, ciudadDeOrigen) {
+    super(nombre, edad)
+    this.ciudadDeOrigen = ciuddDeOrigen
+  }
+  saludar() {
+    let saludo = super.saludar()
+
+    if (this.ciudadDeOrigen) {
+      saludo += ` Procedo de ${this.ciudadDeOrigen}.`
+    }
+
+    return saludo;
+  }
+}
+
+const Pepe = new Viajero('Pepe García', 26, 'Madrid')
+console.log(Pepe.saludar())
+```
+
+
+## Create-react-app
+
+- Nos evita tener que configurar Webpack o Babel
+- ¿Qué incluye?
+
+  - Soporte a React, JSX, ES6, TypeScript y Flow .
+  - Soporte a E6 y superior mediante Babel
+  - Prefijos CSS automáticos
+  - Test runner con soporte de informe de coverage
+  - Servidor de desarrollo en vivo
+  - Webpack configurado para empaquetar JS, CSS e imágenes para producción
+
+
+## Crear una nueva aplicación
+
+  ```
+  npx create-react-app cervezas
+  cd my-app
+  npm start # ejecución
+  npm test # tests
+  npm run build # compilación  
+  ```
+
+
+## Configurar linter
+
+- create-react-app ya viene "predefinida"
+  - Opciones de Babel
+  - Webpack
+  - eslint
+  - ....
+- Podemos hacer *npm run eject* para ver lo que hay por debajo
+  - ¡No hay vuelta atrás!
+- Pero nos da la opción de configurar prettier
+
+
+## Prettier
+
+- Instalación:
+  ```
+  npm i -D prettier
+  ```
+- [Configuración (fichero prettierrc.json)](https://prettier.io/docs/en/configuration.html)
+  - Por ejemplo:
+    ```js
+    {
+    "tabWidth": 2,
+    "semi": false,
+    "singleQuote": true
+    }
+    ```
+  - Observa autocompletado del editor para personalizar prettier
+
+
+## Vistazo a la aplicación por defecto
+
+- Se utilizan imports y exports de ES6
+- Se importan CSS e imágenes gracias a Webpack
+- Se da estilos a los elementos vía el atributo *className*
+- Nuestros componentes extienden de React.Component
+  - Utilizan el método render para representarlos en el navegador (vía JSX)
+  - Heredan otros métodos que no aparecen aquí
+
+
+## Compilación
+
+```
+npm run build
+npm i -g serve
+serve -s build
+```
+
+
+## Preparación interfaz
+
+![](./cervezas.png)
+
+
+## Componentes React
+
+- Dividiremos nuestra interfaz en varios componentes
+  ```jsx
+    <CervezasView />
+    <Header />
+    <Sidebar />
+    <Menu />
+    <CervezasList />
+    <CervezaSnippet />
+    ....
+  ```
+
+
+## Extensiones para React
+
+- Configuramos emmet para que funcione con jsx:
+  
+  ```json
+    "emmet.includeLanguages": {"javascript": "javascriptreact" }
+  ```
+
+- Usaremos una extensión de Visual Code Editor para React
+  - [React Standard Style code snippets](https://marketplace.visualstudio.com/items?itemName=TimonVS.ReactSnippetsStandard)
+
+
+## Crear componente Header
+
+- Con el disparador *rce* tenemos la plantilla para nuestro primer componente
+
+  ```jsx
+    import React, { Component } from 'react'
+    import Header from './Header'
+
+    class App extends Component {
+      render() {
+        return <Header />
+      }
+    }
+
+    export default App
+  ```
+
+
+## Modificación app.js
+
+- Modificamos *app.js* para que cargue el Header:
+
+  ```js
+    import React, { Component } from 'react'
+    import Header from './Header'
+
+    class App extends Component {
+      render() {
+        return <Header />
+      }
+    }
+
+    export default App
+  ```
+
+
+## Header configurable
+
+- El Header va a ser un componente reusable entre otros sitios de mi web
+- Me interesa que el título se pueda cambiar
+  - Se envía como una propiedad
+  - React permite hacer un checking de las propiedades para el desarrollo
+    - Ese código se elimina cuando se hace el build
+    - Se deben disparar los snippets mediante *pts, ptn, ptsr...*
+
+
+## Código Header configurable
+
+```js
+  import React, { Component } from 'react'
+  import PropTypes from 'prop-types'
+
+  export class Header extends Component {
+    static propTypes = {
+      title: PropTypes.string.isRequired
+    }
+
+    render() {
+      return (
+        <header>
+          <h1>{this.props.title}</h1>
+        </header>
+      )
+    }
+  }
+
+  export default Header
+```
+
+
+## Llamada al Header con propiedades
+
+- Se utilizan atributos "custom" 
+- Se sigue la sintáxis de html
+  
+  ```js
+  import React, { Component } from 'react'
+  import Header from './Header'
+
+  class App extends Component {
+    render() {
+      return <Header title="Buscador de cervezas" />
+    }
+  }
+
+  export default App
+  ```
+
+
+## Ejercicio completar Header
+
+- Añade la propiedad *subtitle* que, **si existe**, se debe renderizar con un párrafo
+
+
+## Solución Header
+
+```js
+import React, { Component } from 'react'
+import Header from './Header'
+
+class App extends Component {
+  render() {
+    return (
+      <Header
+        title="Buscador de cervezas"
+        subtitle="Elije la cerveza que más te guste para ver sus características"
+      />
+    )
+  }
+}
+
+export default App
+```
+
+
+## Aplicar estilos
+
+- Creamos un fichero Header.css:
+
+```css
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+```
+
+
+- Importamos el css dentro de nuestro componente Header:
+
+```jsx
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import './Header.css'
+
+export class Header extends Component {
+  static propTypes = {
+    title: PropTypes.string.isRequired,
+    subtitle: PropTypes.string
+  }
+
+  render() {
+    return (
+      <header className="header">
+        <h1>{this.props.title}</h1>
+        {this.props.subtitle && <p>{this.props.subtitle}</p>}
+      </header>
+    )
+  }
+}
+
+export default Header
+```
+
+
+## Ejercicio
+
+- Crea el resto de componentes y estilos para lograr algo similar a la captura de la aplicación de *cervezas*
+  - breadcrumbs no es necesario
+    - Importaremos un componente que interaccione con el enrutador
+  - Los datos se pueden importar del fichero cervezas.json
+
+    ```bash
+    wget https://raw.githubusercontent.com/juanda99/curso-node-js-proyecto-api/master/data/cervezas.json
+    ```
+
+
+
+# Stateless functional components
+
+
+
+# Enrutado
+
+
+# Configurar layout
+
+- Podemos definir el main de nuestra apliación mediante el paso de una propiedad:
+
+```js
+const Layout = (props) => {
+  return (
+    <div>
+      <Header />
+      {this.props.template}
+      <Footer />
+  )
+}
+
+ReactDOM.render(<Layout content={template} />, document.getElementById('app'))
+```
+
+
+## props.children
+
+- Normalmente se hace utilizando la propiedad *children* que viene por defecto
+
+```js
+const Layout = (props) => {
+  return (
+    <div>
+      <Header />
+      {this.props.children}
+      <Footer />
+  )
+}
+
+ReactDOM.render(
+  <Layout>
+    <div>
+      <p>Esto sería el main</p>
+    </div>
+  </Layout>, 
+  document.getElementById('app'))
+```
+
+## Contanedores y componentes
+
+- Los contenedores son los que reciben los datos
+  - Se encargan de recibir los datos
+  - Renderizan componentes (sus hijos), pasándoles las props que necesiten
+- Los componentes "son tontos":
+  - Reciben unos datos
+  - A partir de dichos datos su estado/representación es siempre el mismo.
+
+
+## Anidar componentes
+
+- El componente View / Page, anidará todos los componentes de la página
+- Algunos se utilizarán en alguna otra vista (<Header />, <Menu />...) otros no.
+
+
+## Métodos y eventos
+
+- Al pulsar el botón se debe solicitar vía ajax al servidor los datos necesarios
+- Probemos con un alert
+- La función ajax se enviará como propiedad (componente más reutilizable) 
+  - Podría ser una petición ajax
+  - Un filtro sobre los datos que ya hay
+  - ....
+
+```class AddOption extends React.Component {
+  handleAddOption(e) {
+    e.preventDefault();
+
+    const option = e.target.elements.option.value.trim();
+
+    if (option) {
+      alert(option);
+    }
+  }
+  render() {
+    return (
+      <div>
+        <form onSubmit={this.handleAddOption}>
+          <input type="text" name="option" />
+          <button>Add Option</button>
+        </form>
+      </div>
+    );
+  }
+}
+```
+
+# Propiedades por defecto
+
+```js
+class Greeting extends React.Component {
+  // ...
+}
+
+Greeting.defaultProps = {
+  name: 'Mary'
+}
+```
+
+## Estado inicial
+- Usando ***this.state***:
+
+```js
+class Counter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {count: props.initialCount};
+  }
+  // ...
+}
+```
+
+## Uso de bind
+
+```js
+class SayHello extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {message: 'Hello!'};
+    // This line is important!
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    alert(this.state.message);
+  }
+
+  render() {
+    // Because `this.handleClick` is bound, we can use it as an event handler.
+    return (
+      <button onClick={this.handleClick}>
+        Say hello
+      </button>
+    );
+  }
+}
+```
+
+## Otra opción
+
+- Experimental
+```
+class SayHello extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {message: 'Hello!'};
+  }
+  // WARNING: this syntax is experimental!
+  // Using an arrow here binds the method:
+  handleClick = () => {
+    alert(this.state.message);
+  }
+
+  render() {
+    return (
+      <button onClick={this.handleClick}>
+        Say hello
+      </button>
+    );
+  }
+}
+```
+
+
+## Clases o funciones
+
+- [Clases vs funciones](https://frontarm.com/articles/es6-classes-vs-function-components/)
+
+
+## Stateless functional components
+
+- Muchos componentes son sencillos y no tienen estado
+  - Deberían ser la gran mayoría de nuestra aplicación
+- Se pueden crear mediante clases o funciones
+
+- Más sencillos de leer
+- Más fáciles para hacer tests
+
+```js
+const User = (props) => {
+  return (
+    <div>
+      <p>Nombre: {props.nombre}</p>
+      <p>Edad: {props.edad}</p>
+    </div>
+  )
+}
+
+ReactDOM.render(<User nombre='Pepe' edad={20} />, document.getElementById('app'));
+```
+
+## Valores por defecto
+
+User.defaultProps = {
+  age: 0
+}
+
+
+## Debug
+
+- Utilizaremos las [React Dev Tools](https://github.com/facebook/react-devtools)
+
+
+
+# Webpack
+
+
+## ¿Qué es webpack?
+
+- Un empaquetador de módulos (module bundler)
+  - Genera un achivo único con los módulos que necesita tu aplicación para funcionar.
+  - Permite generar bundles independientes por cada página de tu app
+    - Suelen ser aplicaciones con mucho JavaScript
+    - Hace más rápida la carga
