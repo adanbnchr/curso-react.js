@@ -1373,16 +1373,319 @@ export default Header
 
 
 
-# Stateless functional components
+# Propiedades, estado y ciclo de vida de los componentes
+
+
+## Estado de un componente
+
+- Un componente puede guardar un estado en ***this.state***:
+
+```js
+class Clock extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {date: new Date()};
+  }
+
+  render() {
+    return (
+      <div>
+        <h1>Hello, world!</h1>
+        <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+      </div>
+    );
+  }
+}
+```
+
+
+## Más corto
+
+- No es necesario llamar al constructor
+
+```js
+class Clock extends React.Component {
+
+  state = {date: new Date()}
+
+  render() {
+    return (
+      <div>
+        <h1>Hello, world!</h1>
+        <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+      </div>
+    );
+  }
+}
+```
+
+
+## Métodos
+
+- Cada componente tiene unos [métodos asociados a su tiempo de vida](https://reactjs.org/docs/react-component.html)
+- El estado se puede modificar con ***setState***
+- Cada vez que el estado cambia, se vuelve a renderizar el componente
+  - Cuando las propiedades cambian también
+
+
+## Ejemplo
+
+```js
+class Clock extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {date: new Date()};
+  }
+
+  componentDidMount() {
+    this.timerID = setInterval(
+      () => this.tick(),
+      1000
+    );
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerID);
+  }
+
+  tick() {
+    this.setState({
+      date: new Date()
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        <h1>Hello, world!</h1>
+        <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(
+  <Clock />,
+  document.getElementById('root')
+);
+```
+
+
+## Binding de métodos ES2015
+
+```js
+class Foo extends Component {
+  constructor(props) {
+    super(props);
+    this.handleClick = this.handleClick.bind(this);
+  }
+  handleClick() {
+    console.log('Click happened');
+  }
+  render() {
+    return <button onClick={this.handleClick}>Click Me</button>;
+  }
+}
+```
+
+
+## Binding en el render
+
+- Nos ahorramos el constructor
+
+```js
+  class Foo extends Component {
+  handleClick() {
+    console.log('Click happened');
+  }
+  render() {
+    return <button onClick={this.handleClick.bind(this)}>Click Me</button>;
+  }
+}
+```
+
+
+## Métodos como propiedades de clase
+
+- Está en Stage 3 (proposal)
+- El más corto
+
+  ```jsx
+    handleClick = () => {
+      console.log('Click happened');
+    }
+    render() {
+      return <button onClick={this.handleClick}>Click Me</button>;
+    }
+  }
+  ```
+
+
+## Ejercicio
+
+- Crea un componente llamado SearchBox
+  - El componente estará constituido de:
+    - Un botón con el texto Buscar
+    - Una caja de texto
+  - El botón de buscar estará habilitado sólo si hay un texto escrito
+  - Al pulsar el botón se debe escribir el texto que se busca en la pantalla.
+
+
+## Solución
+
+```js
+import React, { Component } from 'react'
+
+export class CervezasPage extends Component {
+  state = {
+    disabled: true
+  }
+
+  handleSubmit = event => {
+    event.preventDefault()
+  }
+
+  handleChange = event => {
+    this.setState({ searchText: event.target.value }, () =>
+      console.log(this.state.searchText)
+    )
+    this.setState({ disabled: !event.target.value })
+  }
+
+  render() {
+    const { disabled } = this.state
+    return (
+      <div>
+        <form onSubmit={this.handleSubmit}>
+          <input
+            type="text"
+            name="busqueda"
+            ref={this.textInput}
+            onChange={this.handleChange}
+          />
+          <button type="submit" disabled={disabled}>
+            Buscar
+          </button>
+        </form>
+      </div>
+    )
+  }
+}
+
+export default CervezasPage
+```
+
+
+## Observaciones ejercicio
+
+- **setState es asíncrono**
+- bind de this
+
+
+## setState es asíncrono
+
+```js
+  handleChange = event => {
+    this.setState({ searchText: event.target.value }, () =>
+      console.log(this.state.searchText)
+    )
+  }
+```
+
+```js
+  handleChange = event => {
+    this.setState({ searchText: event.target.value })
+    console.log(this.state.searchText)
+  }
+```
+
+
+## bind de this
+
+- Si no utilizamos nada experimental:
+
+  - En la llamada:
+  ```
+    <input
+      type="text"
+      name="busqueda"
+      ref={this.textInput}
+      onChange={this.handleChange.bind(this)}
+    />
+  ```
+
+  - En el constructor:
+  ```
+    constructor() {
+      this.handleChange = this.handleChange.bind(this);
+    }
+  ```
+
+
+## Stateless functional components
+
+- Muchos componentes son sencillos y no tienen estado
+  - Deberían ser la gran mayoría de nuestra aplicación
+- Se pueden crear mediante clases pero mejor como funciones
+  - Más sencillos de leer
+  - Más fáciles para hacer tests
+
+
+## Ejemplo componente como función
+
+```js
+const User = (props) => {
+  return (
+    <div>
+      <p>Nombre: {props.nombre}</p>
+      <p>Edad: {props.edad}</p>
+    </div>
+  )
+}
+
+ReactDOM.render(
+  <User nombre='Pepe' edad={20} />, 
+  document.getElementById('app')
+  )
+```
+
+
+## Clases o funciones
+
+- Si tu componente necesita acceder a los métodos que tienen las clases de React utiliza una clase
+- Si necesitas acceder a this, usa una clase
+
+```jsx
+function IsThisUndefined(props) {
+  return <div>{props.title} {this === undefined ? 'Yes' : 'No'}!</div>
+}
+
+ReactDOM.render(
+  <IsThisUndefined title='Is this undefined?' />,
+  document.getElementById('root')
+)
+```
+
+- En otro caso, usa una función
+
+
+## Debug
+
+- Utilizaremos las [React Dev Tools](https://github.com/facebook/react-devtools)
+
+
+## Ejercicio
+
+- Cambia todos los componentes que puedas de clases a funciones
 
 
 
 # Enrutado
 
 
-# Configurar layout
+## Configurar layout
 
-- Podemos definir el main de nuestra apliación mediante el paso de una propiedad:
+- Podemos definir el main de nuestra aplicación mediante el paso de una propiedad:
 
 ```js
 const Layout = (props) => {
@@ -1391,10 +1694,14 @@ const Layout = (props) => {
       <Header />
       {this.props.template}
       <Footer />
+    </div>
   )
 }
 
-ReactDOM.render(<Layout content={template} />, document.getElementById('app'))
+ReactDOM.render(
+  <Layout content={template} />, 
+  document.getElementById('app')
+)
 ```
 
 
@@ -1409,6 +1716,7 @@ const Layout = (props) => {
       <Header />
       {this.props.children}
       <Footer />
+    </div>
   )
 }
 
@@ -1421,168 +1729,325 @@ ReactDOM.render(
   document.getElementById('app'))
 ```
 
+
+## Enrutado en cliente
+
+- La generación del html ocurre en el cliente
+  - Se usa la API de historial del navegador
+    - Si no, no funcionan los botones de retroceso y avance del historial
+  - También puede ser que el usuario acceda directamente a una URL específica
+    - El servidor web debe delegar en el cliente (no mostrar un 404)
+- Se busca una opción más específica (un componente de React)
+
+
+## Nuestras rutas
+
+- ***/***
+  - Página de inicio
+- ***/cervezas***
+  - Sacaremos un listado de las cervezas
+- ***/cervezas/id***
+  - Veremos la ficha de una cerveza
+- ***/contactar***
+  - Veremos la página de contactar
+
+
+## Enrutado en cliente
+
+- Utilizaremos [react-router](https://reacttraining.com/react-router/)
+
+```js
+npm i -S react-router-dom
+```
+
+- Otros paquetes:
+  - ***react-router*** para nativo y DOM
+  - ***react-router-native*** solo nativo
+
+
+## Enrutado en servidor
+
+- Solicitud ***midominio/***
+  - El servidor devuelve nuestro index.html y su js asociado
+  - Todo funciona
+
+- ¿Y si solicitamos ***midominio/cervezas***?
+  - La ruta no existe en el servidor....
+
+
+- Solicitud ***midominio/cervezas***
+  - El servidor no encuentra la ruta/fichero
+  - Es una ruta "local"
+  - ¿Devuelve un 404?
+    - ¡No! Siempre devuelve el index.html y su js asociado
+    - El enrutador en local se encargará de resolver en función de ***window.location.url***
+
+
+## Configuración de enrutado en servidor (Apache)
+
+```html
+# To host on root path just use  "<Location />" for http://mydomainname.in
+# To host on non-root path use "<Location /myreactapp>" for http://mydomainname.in/mypath
+# If non-root path, don't forgot to add "homepage": "/myreactapp" in your app's package.json
+<VirtualHost *:80>
+	ServerName mydomainname.in
+	DirectoryIndex index.html
+	DocumentRoot /var/www/html
+
+	ErrorLog ${APACHE_LOG_DIR}/error.log
+	CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+	<Location /myreactapp >
+		RewriteEngine on
+		RewriteCond %{REQUEST_FILENAME} !-d
+		RewriteCond %{REQUEST_FILENAME} !-f
+		RewriteRule . /myreactapp/index.html [L]
+	</Location>
+</VirtualHost>
+```
+
+
+## Configuración de enrutado en servidor (nginx)
+
+```json
+# To host on root path just use  "location /" for http://mydomainname.in
+# To host on non-root path use "location /myreactapp" for http://mydomainname.in/mypath
+# If non-root path, don't forgot to add "homepage": "/myreactapp" in your app's package.json 
+server {
+    server_name mydomainname.in;
+    index index.html;
+    error_log  /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+    root /usr/share/nginx/html;
+  
+    location /myreactapp {
+        try_files $uri $uri/ /myreactapp/index.html;
+    }
+}
+```
+
+
+## Componentes React Router
+
+
+## BrowserRouter
+
+- Encargado de comunicarse con la API de historial de HTML5 del navegador
+
+  ```js
+  import { BrowserRouter as Router } from 'react-router-dom'
+  ReactDOM.render(
+    <Router>
+      <App />
+    </Router>,
+    document.getElementById('root')
+  )
+  ```
+
+
+## Route
+
+- Encargado de renderizar algo en función de la ruta
+  ```jsx
+    <Route exact path="/" component={HomePage} />
+    <Route path="/contactar" component={ContactPage} />
+    ....
+  ```
+
+
+## Switch
+
+- Por defecto las rutas son inclusivas
+  - Podemos utilizar ***Switch*** para que sean exclusivas
+  - En el siguiente caso, la ruta ***/about*** renderizaría todos los componentes:
+
+    ```js
+    <Route path="/about" component={About}/>
+    <Route path="/:user" component={User}/>
+    <Route component={NoMatch}/>
+    ```
+
+
+  - En este caso ***/about*** solo el componente ***About***:
+```js
+<Switch>
+  <Route path="/about" component={About}/>
+  <Route path="/:user" component={User}/>
+  <Route component={NoMatch}/>
+</Switch>
+```
+
+
+## Link
+
+- Comportamiento hipervínculos:
+  - El navegador busca en un servidor la página según el atributo href
+  - Se resulve en remoto
+- Queremos que resuelva "en local" 
+  - Mediante las **Route** que haya definidas
+  - Usaremos el componente **Link**
+  - Link se renderiza como un hipervínculo
+
+
+## Ejemplo uso Link
+
+```js
+import { Link } from 'react-router-dom'
+const Nav = () => (
+    <Link to='/'>Home</Link>
+)
+```
+
+
+## Ejercicio
+- Utiliza los componentes BrowserRouter, Route, Switch y Link para renderizar las siguientes páginas:
+  - Inicio
+  - Cervezas
+  - Cerveza
+  - Contactar
+- Crea un componente de tipo catchAll para las rutas que no existan
+
+
+## App.js
+
+- Inyectando React Router queda así:
+
+```jsx
+import React, { Component } from 'react'
+import { BrowserRouter as Router } from 'react-router-dom'
+import './App.css'
+import Header from './Header'
+import Footer from './Footer'
+import Sidebar from './Sidebar'
+import Main from './Main'
+
+class App extends Component {
+  render() {
+    return (
+      <Router>
+        <div>
+          <Header
+            titulo="Buscador de cervezas"
+            subtitulo="Elige la cerveza que más te guste para ver sus características"
+          />
+          <div id="wrapper">
+            <Sidebar />
+            <Main />
+          </div>
+          <Footer />
+        </div>
+      </Router>
+    )
+  }
+}
+
+export default App
+```
+
+
+## Sidebar.js
+
+```jsx
+import React, { Component } from 'react'
+import './Sidebar.css'
+import { Link } from 'react-router-dom'
+
+export class Sidebar extends Component {
+  render() {
+    return (
+      <aside>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Inicio</Link>
+            </li>
+            <li>
+              <Link to="/cervezas">Buscador de Cervezas</Link>
+            </li>
+            <li>
+              <Link to="/contactar">Contactar</Link>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+    )
+  }
+}
+
+export default Sidebar
+```
+
+
+## Main.js
+
+```jsx
+import React, { Component } from 'react'
+import IndexPage from './IndexPage'
+import CervezaPage from './CervezaPage'
+import CervezasPage from './CervezasPage'
+import ContactPage from './ContactPage'
+import NoMatch from './NoMatch'
+import { Route, Switch } from 'react-router-dom'
+import './Main.css'
+
+export class Main extends Component {
+  render() {
+    return (
+      <main>
+        <Switch>
+          <Route path="/" exact component={IndexPage} />
+          <Route path="/cervezas" component={CervezasPage} />
+          <Route path="/:id" component={CervezaPage} />
+          <Route path="/contact" component={ContactPage} />
+          <Route component={NoMatch} />
+        </Switch>
+      </main>
+    )
+  }
+}
+
+export default Main
+```
+
+
+
+# Refactorización de código
+
+
 ## Contanedores y componentes
 
 - Los contenedores son los que reciben los datos
   - Se encargan de recibir los datos
   - Renderizan componentes (sus hijos), pasándoles las props que necesiten
-- Los componentes "son tontos":
+- Los componentes "son tontos"
   - Reciben unos datos
   - A partir de dichos datos su estado/representación es siempre el mismo.
 
 
-## Anidar componentes
+## En nuestro caso particular
 
-- El componente View / Page, anidará todos los componentes de la página
-- Algunos se utilizarán en alguna otra vista (<Header />, <Menu />...) otros no.
-
-
-## Métodos y eventos
-
-- Al pulsar el botón se debe solicitar vía ajax al servidor los datos necesarios
-- Probemos con un alert
-- La función ajax se enviará como propiedad (componente más reutilizable) 
-  - Podría ser una petición ajax
-  - Un filtro sobre los datos que ya hay
-  - ....
-
-```class AddOption extends React.Component {
-  handleAddOption(e) {
-    e.preventDefault();
-
-    const option = e.target.elements.option.value.trim();
-
-    if (option) {
-      alert(option);
-    }
-  }
-  render() {
-    return (
-      <div>
-        <form onSubmit={this.handleAddOption}>
-          <input type="text" name="option" />
-          <button>Add Option</button>
-        </form>
-      </div>
-    );
-  }
-}
-```
-
-# Propiedades por defecto
-
-```js
-class Greeting extends React.Component {
-  // ...
-}
-
-Greeting.defaultProps = {
-  name: 'Mary'
-}
-```
-
-## Estado inicial
-- Usando ***this.state***:
-
-```js
-class Counter extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {count: props.initialCount};
-  }
-  // ...
-}
-```
-
-## Uso de bind
-
-```js
-class SayHello extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {message: 'Hello!'};
-    // This line is important!
-    this.handleClick = this.handleClick.bind(this);
-  }
-
-  handleClick() {
-    alert(this.state.message);
-  }
-
-  render() {
-    // Because `this.handleClick` is bound, we can use it as an event handler.
-    return (
-      <button onClick={this.handleClick}>
-        Say hello
-      </button>
-    );
-  }
-}
-```
-
-## Otra opción
-
-- Experimental
-```
-class SayHello extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {message: 'Hello!'};
-  }
-  // WARNING: this syntax is experimental!
-  // Using an arrow here binds the method:
-  handleClick = () => {
-    alert(this.state.message);
-  }
-
-  render() {
-    return (
-      <button onClick={this.handleClick}>
-        Say hello
-      </button>
-    );
-  }
-}
-```
+- Creamos vistas para cada página que actúan como contenedores
+  - Agrupan componentes
+  - Les mandan como deben representarse
+- Agrupamos los componentes en una carpeta propia
+- Creamos otra carpeta (opcional) para containers
+- Cada componente en su carpeta con su nombre (opcional)
+  - Se crea un index.js por componente para ahorrar código
 
 
-## Clases o funciones
-
-- [Clases vs funciones](https://frontarm.com/articles/es6-classes-vs-function-components/)
-
-
-## Stateless functional components
-
-- Muchos componentes son sencillos y no tienen estado
-  - Deberían ser la gran mayoría de nuestra aplicación
-- Se pueden crear mediante clases o funciones
-
-- Más sencillos de leer
-- Más fáciles para hacer tests
-
-```js
-const User = (props) => {
-  return (
-    <div>
-      <p>Nombre: {props.nombre}</p>
-      <p>Edad: {props.edad}</p>
-    </div>
-  )
-}
-
-ReactDOM.render(<User nombre='Pepe' edad={20} />, document.getElementById('app'));
-```
-
-## Valores por defecto
-
-User.defaultProps = {
-  age: 0
-}
+## CervezasView
+  - Contiene los componentes ***SearchBox** y ***CervezasList***
+  - Obtiene vía AJAX las búsquedas de la cervezas
+    - Realmente no lo obtiene el, lo hace searchBox pero porque le pasa la función...
+  - Cambia su estado
+  - Envía esos datos al componente CervezasList para que los represente
+    - Este a su vez se lo manda a cada componente CervezaSnippet
 
 
-## Debug
+## ¿Refactorizamos?
 
-- Utilizaremos las [React Dev Tools](https://github.com/facebook/react-devtools)
+- ¿Aprovechamos para solicitar los datos a la API REST?
+- [Ejemplo solicitud API](https://www.robinwieruch.de/react-fetching-data/#react-where-fetch-data)
 
 
 
@@ -1596,3 +2061,5 @@ User.defaultProps = {
   - Permite generar bundles independientes por cada página de tu app
     - Suelen ser aplicaciones con mucho JavaScript
     - Hace más rápida la carga
+
+
