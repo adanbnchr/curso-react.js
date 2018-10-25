@@ -2044,10 +2044,445 @@ export default Main
     - Este a su vez se lo manda a cada componente CervezaSnippet
 
 
-## ¿Refactorizamos?
 
-- ¿Aprovechamos para solicitar los datos a la API REST?
-- [Ejemplo solicitud API](https://www.robinwieruch.de/react-fetching-data/#react-where-fetch-data)
+# Implementación de la búsqueda de cervezas
+
+
+## CervezasPage
+
+- Se define una variable cervezas
+  - Esta variable la rellenamos "a mano"
+  - Posteriormente se deberían recibir los datos vía AJAX
+- Se pasa el parámetro a ***CervezasList***
+
+
+## Código CervezasPage
+
+  ```js
+  import React from 'react'
+  import SearchBox from '../components/SearchBox'
+  import CervezasList from '../containers/CervezasList'
+
+  export default function CervezasPage() {
+    const cervezas = [
+      { nombre: 'Ambar', desc: 'Cerveza de Aragón' },
+      { nombre: 'Coronita', desc: 'Cerveza mejicana' }
+    ]
+    return (
+      <div>
+        <SearchBox />
+        <CervezasList cervezas={cervezas} />
+      </div>
+    )
+  }
+  ```
+
+
+## CervezasList
+
+- Recibimos las cervezas como parámetro
+- Por cada elemento del array se renderiza un componente CervezaSnippet
+- No tiene estado, por lo que utilizaremos una función para definirlo
+- ¿Lo intentas?
+
+
+## Código CervezasList
+
+```
+import React from 'react'
+import PropTypes from 'prop-types'
+import CervezaSnippet from '../components/Cervezas/CervezasSnippet'
+
+const CervezasList = props => {
+  const { cervezas } = props
+  return (
+    <div>
+      {cervezas.map(cerveza => (
+        <CervezaSnippet
+          key={cerveza.nombre}
+          nombre={cerveza.nombre}
+          desc={cerveza.desc}
+        />
+      ))}
+    </div>
+  )
+}
+
+CervezasList.propTypes = {
+  cervezas: PropTypes.arrayOf(
+    PropTypes.shape({
+      nombre: PropTypes.string.required,
+      desc: PropTypes.string
+    })
+  )
+}
+
+export default CervezasList
+```
+
+
+## Observaciones de CervezasList
+
+- Podemos hacer **destructuring** en el mismo argumento:
+
+  ```js
+  const CervezasList = (props) => {
+    const { cervezas } = props
+  ```
+
+- Es equivalente a:
+  
+  ```js
+  const CervezasList = ({cervezas}) => {
+  ```
+
+
+- ¡Necesitamos el atríbuto key!
+  - Es un requisito de react para saber gestionar el VirtualDom
+- La validación de la propiedad cervezas puede ser tan exigente como queramos.
+
+
+## Código CervezasSnippet
+
+```js
+import React from 'react'
+import PropTypes from 'prop-types'
+
+const CervezasSnippet = ({ nombre, desc }) => (
+  <article>
+    <h1>{nombre}</h1>
+    {desc ? <p>{desc}</p> : ''}
+  </article>
+)
+
+CervezasSnippet.propTypes = {
+  nombre: PropTypes.string.isRequired,
+  desc: PropTypes.string
+}
+
+export default CervezasSnippet
+```
+
+
+## Implementación de AJAX
+
+- En función de la lógica de nuestro programa se podría hacer de 2 formas:
+  - Solicitud de **todas las cervezas**
+  - Solicitud de **algunas cervezas**
+
+
+## Solicitud de todas las cervezas
+
+- Se guardan en el estado del componente CervezasPage (this.state.cervezas)
+- Se crea una función que filtre entre ellas
+- Este filtro se ejecutará al pulsar el botón del componente SearchBox
+
+
+## Solicitud de **algunas cervezas**
+
+- Se guardan en el estado del componente CervezasPage (this.state.cervezas)
+- Se crea una función que solicite las cervezas vía ajax
+- Esta función se ejecutará cada vez que se pulse el botón de buscar
+
+
+## Ejercicio AJAX
+
+- Empezaremos con la primera opción:
+  - Arranca tu servicio de API REST de cervezas
+  - Configura tu petición ajax en CervezasPage en el método ***componentDidMount*** (trigger ***cdm***)
+
+  ```js
+    componentDidMount() {
+      fetch('https://api.mydomain.com')
+        .then(response => response.json())
+        .then(cervezas => this.setState({ cervezas }));
+    }
+  ```
+  - Si la petición da error se debería mostrar el mismo
+
+
+## Pistas
+
+- Comprueba que el servicio api esté arrancado (http://localhost:8080/api/cervezas)
+  - *npm start*
+  - ¡Y el contenedor docker de MongoDB!
+- Comprueba el nombre de los campos de cervezas
+  - Cambiar también en CervezasList *desc* por *descripción*
+
+
+## Solución
+
+```js
+import React, { Component } from 'react'
+import SearchBox from '../components/SearchBox'
+import CervezasList from '../containers/CervezasList'
+
+export default class CervezasPage extends Component {
+  state = {
+    cervezas: [],
+    error: ''
+  }
+  componentDidMount = () => {
+    fetch('http://localhost:8080/api/cervezas')
+      .then(response => response.json())
+      .then(cervezas => this.setState({ cervezas, error: '' }))
+      .catch(error => this.setState({ error: error.message }))
+  }
+
+  render() {
+    const { cervezas, error } = this.state
+    return (
+      <div>
+        <SearchBox />
+        <CervezasList cervezas={cervezas} />
+        {error ? <p>{error}</p> : ''}
+      </div>
+    )
+  }
+}
+```
+
+
+## Mejoras
+
+- ¿Configuramos los ENDPOINT en un fichero aparte?
+- ¿Y si queremos utilizar axios?
+  ```js
+    import axios from 'axios'
+    import { GETCERVEZAS } from '../config'
+    ...
+     axios.get(GETCERVEZAS)
+      .then(result => this.setState({
+    ...
+  ```
+
+
+## Más mejoras
+
+- ¿Un spinner mientras se está cargando la petición?
+- ¿Y si utilizamos async-await?
+  
+
+```js
+async componentDidMount() {
+  this.setState({ isLoading: true });
+  try {
+    const result = await axios.get(GETCERVEZAS);
+    this.setState({
+      cervezas: result.data.cervezas,
+      isLoading: false,
+      error: ''
+    })
+  } catch (error) {
+    this.setState({
+      error: error.message
+      isLoading: false
+    })
+  }
+}
+```
+
+
+## Implementación SearchBox
+
+- Creamos una función filter en CervezasPage que se pasa como parámetro al componente SearchBox
+- El componente SearchBox comprueba la propiedad
+- El componente SearchBox la llama desde su controlador del envío del formulario.
+- ¿Lo intentas?
+
+
+## Solución CervezasPage.js
+
+```js
+export default class CervezasPage extends Component {
+  state = {
+    cervezas: [],
+    error: '',
+    cervezasFiltradas: []
+  }
+  componentDidMount = () => {
+    fetch('http://localhost:8080/api/cervezas')
+      .then(response => response.json())
+      .then(cervezas =>
+        this.setState({ cervezas, error: '', cervezasFiltradas: cervezas })
+      )
+      .catch(error => this.setState({ error: error.message }))
+  }
+
+  filterBeers = text => {
+    const cervezasFiltradas = this.state.cervezas.filter(cerveza => {
+      return cerveza.descripción.includes(text) || cerveza.nombre.includes(text)
+    })
+    this.setState({ cervezasFiltradas })
+  }
+
+  render() {
+    const { cervezasFiltradas, error } = this.state
+    return (
+      <div>
+        <SearchBox filter={this.filterBeers} />
+        <CervezasList cervezas={cervezasFiltradas} />
+        {error ? <p>{error}</p> : ''}
+      </div>
+    )
+  }
+}
+```
+
+
+## Solución SearchBox
+```js
+  import React, { Component } from 'react'
+  import PropTypes from 'prop-types'
+
+  export default class SearchBox extends Component {
+    static propTypes = {
+      filter: PropTypes.func.isRequired
+    }
+
+    state = {
+      disabled: true,
+      searchText: ''
+    }
+
+    handleChange = event => {
+      console.log('kkkkkkkk')
+      const searchText = event.target.value
+      this.setState({
+        disabled: searchText ? false : true,
+        searchText
+      })
+    }
+
+    handleSubmit = event => {
+      event.preventDefault()
+      console.log('submit!')
+      this.props.filter(this.state.searchText)
+    }
+
+    render() {
+      const { disabled } = this.state
+      return (
+        <div>
+          <form onSubmit={this.handleSubmit}>
+            <input type="text" onChange={this.handleChange} />
+            <button type="submit" disabled={disabled}>
+              Buscar
+            </button>
+          </form>
+        </div>
+      )
+    }
+  }
+```
+
+
+## Debug
+
+- Instalación de [extensión de Chrome para Visual Code](https://marketplace.visualstudio.com/items?itemName=msjsdiag.debugger-for-chrome)
+- Configuración:
+
+```json
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Chrome against localhost",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}
+```
+
+
+
+# Integración con Material UI
+
+
+## Instalación material-ui
+
+- [Instalamos material-ui según documentación](https://material-ui.com/getting-started/installation/):
+
+```bash
+npm install @material-ui/core
+npm install @material-ui/icons
+```
+
+- Las fuentes mediante [Google Web Fonts](https://fonts.google.com/):
+
+```html
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+```
+
+- Si utilizamos font icons (pero mejor usar iconos en svg)
+
+```html
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+```
+
+
+## Nuevo header
+
+- Utilizaremos el componente App Bar de Material-ui
+
+  - Vamos a [Component Demos](https://material-ui.com/demos/app-bar/)
+  - Copiamos el código de la demo más sencilla (Simple App Bar)
+  - Creamos fichero Header.js con su contenido (dentro de src)
+
+
+## Importamos desde App.js
+
+```js
+import React, { Component } from "react";
+import Header from "./Header.js";
+import "./App.css";
+
+class App extends Component {
+  render() {
+    return (
+      <div className="App">
+        <Header />
+      </div>
+    );
+  }
+}
+
+export default App;
+```
+
+
+## Comprobar funcionamiento
+
+- Eliminamos el código que sobra de Header.js
+- Comprobamos visualización
+- Resultado fichero _Header.js_:
+
+```js
+import Toolbar from "@material-ui/core/Toolbar";
+import Typography from "@material-ui/core/Typography";
+import IconButton from "@material-ui/core/IconButton";
+import MenuIcon from "@material-ui/icons/Menu";
+
+const Header = () => {
+  return (
+    <AppBar position="static" color="default">
+      <Toolbar>
+        <Typography variant="h6" color="inherit">
+          Cervezas - Lista de cervezas
+        </Typography>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+export default Header;
+```
 
 
 
